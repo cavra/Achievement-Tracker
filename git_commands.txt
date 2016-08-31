@@ -1,0 +1,16 @@
+(1) Create repo with readme.md
+github.tamu.edu
+
+(2) ssh into compute.cs.tamu.edu
+
+git
+
+clone
+
+pull
+add
+commit
+push
+
+status
+log
