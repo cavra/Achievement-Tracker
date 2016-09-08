@@ -62,10 +62,11 @@ class Leaderboard
   def add_player(command, player_id, player_name)
     new_player = {
       :player_name => player_name,
-      :game_list => Hash.new
+      :game_list => Hash.new,
+      :friend_list => Array.new
     }
-    @players[player_id] = new_player
 
+    @players[player_id] = new_player
   end
 
   def add_game(command, game_id, game_name)
@@ -73,8 +74,8 @@ class Leaderboard
       :game_name => game_name,
       :victories => Hash.new
     }
-    @games[game_id] = new_game
 
+    @games[game_id] = new_game
   end
 
   def add_victory(command, game_id, victory_id, victory_name, victory_points)
@@ -85,9 +86,9 @@ class Leaderboard
       }
     }
 
+    # Alternate method, better?
     #@games[game_id][:victories].update(new_victory)
     (@games[game_id][:victories]).merge!(new_victory)
-
   end
 
   def plays(command, player_id, game_id, player_ign)
@@ -98,34 +99,87 @@ class Leaderboard
     }
 
     (@players[player_id][:game_list]).merge!(new_game_list)
-
   end
 
   def add_friends(command, player_id1, player_id2)
-    new_friend = {
+    player1 = get_object("player", player_id1, nil)
+    player2 = get_object("player", player_id2, nil)
 
-    }
-
+    player1[:friend_list].push(player_id2)
+    player2[:friend_list].push(player_id1)
   end
 
   def win_victory(command, player_id, game_id, victory_id)
-    new_win_victory = {
+    victory = get_object("victory", game_id, victory_id)
 
-    }
-
+    (@players[player_id][:game_list][game_id]).merge!({
+      :victories => {
+        victory_id => victory
+      }
+    })
   end
 
   def friends_who_play(command, player_id, game_id)
-    new_friends_who_play = {
+    player = get_object("player", player_id, nil)
+    
+    if player.nil? or player[:friend_list].nil?
+      puts("Player with ID " + player_id + " either doesn't exist or has no friends")
+    else
+      player[:friend_list].each do |friend_id|
+        friend = get_object("player", friend_id, nil)
 
-    }
+        player_game_list = player[:game_list].keys
+        friend_game_list = player[:game_list].keys
 
+        player_game_list.each do |player_game|
+          friend_game_list.each do |friend_game|
+
+            if player_game == friend_game
+              game = get_object("game", player_game, nil)
+              puts(player[:player_name] + " and " + friend[:player_name] + " both play " + game[:game_name])
+            end
+          end
+        end
+      end
+    end
   end
 
   def compare_players(command, player_id1, player_id2, game_id)
     player1 = get_object("player", player_id1, nil)
     player2 = get_object("player", player_id2, nil)
+    
     game = get_object("game", game_id, nil)
+
+    puts("Comparison of " + player1[:player_name] + " and " + player2[:player_name] + " on " + game[:game_name])
+    if player1[:game_list][game_id][:victories].nil?
+      puts(player1[:player_name] + " has no victories for this game")
+    else
+      score = 0
+      puts(player1[:player_name] + "'s victories for this game: ")
+      victory_ids = (player1[:game_list][game_id][:victories]).keys
+      victory_ids.each do |victory_id|
+        victory = get_object("victory", game_id, victory_id)  
+        puts("Victory name: " + victory[:victory_name])
+        puts("Victory points: " + victory[:victory_points])
+        score += (victory[:victory_points]).to_i
+      end
+      puts("Total victory score: " + score.to_s)
+    end
+
+    if player2[:game_list][game_id][:victories].nil?
+      puts(player2[:player_name] + " has no victories for this game")
+    else
+      score = 0
+      puts(player2[:player_name] + "'s victories for this game: ")
+      victory_ids = (player2[:game_list][game_id][:victories]).keys
+      victory_ids.each do |victory_id|
+        victory = get_object("victory", game_id, victory_id)
+        puts("Victory name: " + victory[:victory_name])
+        puts("Victory points: " + victory[:victory_points])
+        score += (victory[:victory_points]).to_i
+      end
+      puts("Total victory score: " + score.to_s)
+    end
 
   end
 
@@ -136,8 +190,28 @@ class Leaderboard
     puts("Player ID: " + player_id)
 
     puts("Plays: ")
-    puts player[:game_list]
+    game_ids = player[:game_list].keys
+    game_ids.each do |game_id| 
+      game = get_object("game", game_id, nil)
+      puts(game[:game_name])
 
+      if player[:game_list][game_id][:victories].nil?
+        puts("No victories for this game")
+      else
+        puts("Victories for this game: ")
+        victory_ids = (player[:game_list][game_id][:victories]).keys
+        victory_ids.each do |victory_id|
+          victory = get_object("victory", game_id, victory_id)  
+          puts(victory[:victory_name])
+        end
+      end
+    end
+
+    puts("Friends: ")
+    player[:friend_list].each do |friend_id|   
+      friend = get_object("player", friend_id, nil)
+      puts(friend[:player_name])
+    end
   end
 
   def summarize_game(command, game_id)
@@ -145,7 +219,6 @@ class Leaderboard
     
     puts("Summary of game: " + game[:game_name])
     puts("Game ID: " + game_id)
-
   end
 
   def summarize_victory(command, game_id, victory_id)
@@ -154,10 +227,10 @@ class Leaderboard
     puts("Summary of victory: " + victory[:victory_name])
     puts("Victory ID: " + victory_id)
     puts("Victory Points: " + victory[:victory_points])
-
   end
 
   def victory_ranking(command)
+
   end
 
   def get_object(type, id, id2)
@@ -170,7 +243,4 @@ class Leaderboard
 
 end
 
-# Call the main function
 main()
-
-

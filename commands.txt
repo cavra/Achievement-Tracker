@@ -97,9 +97,9 @@ WinVictory 40004 4005 502
 
 SummarizePlayer 40001
 
-FriendsWhoPlay 4001 4001
+FriendsWhoPlay 40001 40001
 
-ComparePlayers 4001 4002 4003
+ComparePlayers 40001 40002 4003
 
 SummarizeGame 4003
 
