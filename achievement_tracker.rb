@@ -1,245 +1,387 @@
 #!/usr/bin/ruby
 
 def main()
-
-  commands = strip_input(ARGF.read)
-  parse_commands(commands)
-
+	commands = strip_input(ARGF.read)
+	parse_commands(commands)
 end
 
 def strip_input(input)
-  
-  # Get each non-empty line
-  commands = Array.new
-  input.each_line do |line|
-    if not line.nil? and line.strip.empty? then
-    else
-      commands.push(line)
-    end
-  end
 
-  return commands
+	# Get each non-empty line
+	commands = Array.new
+  	input.each_line do |line|
+    	if not line.nil? and line.strip.empty? then
+   		else commands.push(line)
+    	end
+  	end
+  	return commands
 end
 
 def parse_commands(commands)
 
-  leaderboard = Leaderboard.new()
+	leaderboard = Leaderboard.new()
 
-  # Parse each line and execute the valid ones
-  commands.each do |command|
+	# Parse each line and execute the valid ones
+	commands.each do |command|
 
-    # Get the arguments using regex
-    # https://stackoverflow.com/questions/8162444/ruby-regex-extracting-words
-    args = command.scan(/\s*("([^"]+)"|\w+)\s*/).map { |match| match[1].nil? ? match[0] : match[1] }
+		# Get the arguments using regex
+		# https://stackoverflow.com/questions/8162444/ruby-regex-extracting-words
+		args = command.scan(/\s*("([^"]+)"|\w+)\s*/).map { |match| match[1].nil? ? match[0] : match[1] }
 
-    result = case [args[0], args.length]
-    when ["AddPlayer", 3] then leaderboard.add_player(*args)
-    when ["AddGame", 3] then leaderboard.add_game(*args)
-    when ["AddVictory", 5] then leaderboard.add_victory(*args)
-    when ["Plays", 4] then leaderboard.plays(*args)
-    when ["AddFriends", 3] then leaderboard.add_friends(*args)
-    when ["WinVictory", 4] then leaderboard.win_victory(*args)
-    when ["FriendsWhoPlay", 3] then leaderboard.friends_who_play(*args)
-    when ["ComparePlayers", 4] then leaderboard.compare_players(*args)
-    when ["SummarizePlayer", 2] then leaderboard.summarize_player(*args)
-    when ["SummarizeGame", 2] then leaderboard.summarize_game(*args)
-    when ["SummarizeVictory", 3] then leaderboard.summarize_victory(*args)
-    when ["VictoryRanking", 1] then leaderboard.victory_ranking(*args)
-    else puts("Invalid command: " + command)
-    end
-  end
+		result = case [args[0], args.length]
+		when ["AddPlayer", 3] then leaderboard.add_player(*args)
+		when ["AddGame", 3] then leaderboard.add_game(*args)
+		when ["AddVictory", 5] then leaderboard.add_victory(*args)
+		when ["Plays", 4] then leaderboard.plays(*args)
+		when ["AddFriends", 3] then leaderboard.add_friends(*args)
+		when ["WinVictory", 4] then leaderboard.win_victory(*args)
+		when ["FriendsWhoPlay", 3] then leaderboard.friends_who_play(*args)
+		when ["ComparePlayers", 4] then leaderboard.compare_players(*args)
+		when ["SummarizePlayer", 2] then leaderboard.summarize_player(*args)
+		when ["SummarizeGame", 2] then leaderboard.summarize_game(*args)
+		when ["SummarizeVictory", 3] then leaderboard.summarize_victory(*args)
+		when ["VictoryRanking", 1] then leaderboard.victory_ranking(*args)
+		else printf("Invalid command: %s\n", command)
+		end
+	end
 end
 
 class Leaderboard
-  @players
-  @games
+	@players
+	@games
 
-  def initialize()
-    @players = Hash.new
-    @games = Hash.new
-  end
+	def initialize()
+		@players = Hash.new
+		@games = Hash.new
+	end
 
-  def add_player(command, player_id, player_name)
-    new_player = {
-      :player_name => player_name,
-      :game_list => Hash.new,
-      :friend_list => Array.new
-    }
+	def add_player(command, player_id, player_name)
+		@players[player_id] = {
+			:player_name => player_name,
+			:game_list => Hash.new,
+			:friend_list => Array.new
+		}
+	end
 
-    @players[player_id] = new_player
-  end
+	def add_game(command, game_id, game_name)
+  		@games[game_id] = {
+			:game_name => game_name,
+			:victory_list => Hash.new
+    	}
+  	end
 
-  def add_game(command, game_id, game_name)
-    new_game = {
-      :game_name => game_name,
-      :victories => Hash.new
-    }
+  	def add_victory(command, game_id, victory_id, victory_name, victory_points)
+  		@games[game_id][:victory_list][victory_id] = {
+	  		:victory_name => victory_name, 
+	  		:victory_points => victory_points
+  		}
+  	end
 
-    @games[game_id] = new_game
-  end
+  	def plays(command, player_id, game_id, player_ign)
+  		@players[player_id][:game_list][game_id] = {
+  			:player_ign => player_ign
+    	}
+  	end
 
-  def add_victory(command, game_id, victory_id, victory_name, victory_points)
-    new_victory = {
-      victory_id => {
-        :victory_name => victory_name, 
-        :victory_points => victory_points
-      }
-    }
+  	def add_friends(command, player_id1, player_id2)
+    	@players[player_id1][:friend_list].push(player_id2)
+    	@players[player_id2][:friend_list].push(player_id1)
+  	end
 
-    # Alternate method, better?
-    #@games[game_id][:victories].update(new_victory)
-    (@games[game_id][:victories]).merge!(new_victory)
-  end
+  	def win_victory(command, player_id, game_id, victory_id)
+    	victory = @games[game_id][:victory_list][victory_id]
+    	(@players[player_id][:game_list][game_id]).merge!({
+      		:victory_list => {
+        		victory_id => victory
+      		}
+    	})
+	end
 
-  def plays(command, player_id, game_id, player_ign)
-    new_game_list = {
-      game_id => {
-        :player_ign => player_ign
-      }
-    }
+  	def friends_who_play(command, player_id, game_id)
+    	player = @players[player_id]
+    	game = @games[game_id]
 
-    (@players[player_id][:game_list]).merge!(new_game_list)
-  end
+    	if player.nil? or player[:friend_list].nil?
+     		printf("\nPlayer with ID %s either doesn't exist, or they have no friends :(\n", player_id)
+    	else
+			printf("\nPlayer: %s\n", player[:player_name])
+			printf("Game: %s\n", game[:game_name])
+			printf("Friends who play:\n")
+			write_line(80)
 
-  def add_friends(command, player_id1, player_id2)
-    player1 = get_object("player", player_id1, nil)
-    player2 = get_object("player", player_id2, nil)
+			i = 1
+			player[:friend_list].each do |friend_id|
+        		friend = @players[friend_id]
 
-    player1[:friend_list].push(player_id2)
-    player2[:friend_list].push(player_id1)
-  end
+				friend_game_ids = friend[:game_list].keys
+				friend_game_ids.each do |friend_game_id|
 
-  def win_victory(command, player_id, game_id, victory_id)
-    victory = get_object("victory", game_id, victory_id)
+		        	if friend_game_id == game_id
+			          	printf("%i. %s\n", i, friend[:player_name])
+			          	i += 1
+		        	end
+		        end
+        	end
+      	end
+    end
 
-    (@players[player_id][:game_list][game_id]).merge!({
-      :victories => {
-        victory_id => victory
-      }
-    })
-  end
-
-  def friends_who_play(command, player_id, game_id)
-    player = get_object("player", player_id, nil)
+  	def compare_players(command, player_id1, player_id2, game_id)
+    	printf("\nComparison of %s and %s on %s\n", @players[player_id1][:player_name], @players[player_id2][:player_name], @games[game_id][:game_name])
+    	write_line(80)
     
-    if player.nil? or player[:friend_list].nil?
-      puts("Player with ID " + player_id + " either doesn't exist or has no friends")
-    else
-      player[:friend_list].each do |friend_id|
-        friend = get_object("player", friend_id, nil)
-
-        player_game_list = player[:game_list].keys
-        friend_game_list = player[:game_list].keys
-
-        player_game_list.each do |player_game|
-          friend_game_list.each do |friend_game|
-
-            if player_game == friend_game
-              game = get_object("game", player_game, nil)
-              puts(player[:player_name] + " and " + friend[:player_name] + " both play " + game[:game_name])
-            end
-          end
-        end
-      end
+    	print_victories(player_id1, game_id)
+    	print_victories(player_id2, game_id)
     end
-  end
 
-  def compare_players(command, player_id1, player_id2, game_id)
-    player1 = get_object("player", player_id1, nil)
-    player2 = get_object("player", player_id2, nil)
+  	def print_victories(player_id, game_id)
+    	player = @players[player_id]
+    	game = @games[game_id]
+
+    	if player[:game_list][game_id][:victory_list].nil?
+      		printf("\n %s has no victories for this %s.\n", player[:player_name], game[:game_name])
+    	else
+      		score = 0
+
+			printf("\nPlayer: %s\n", player[:player_name])
+			printf("Game: %s\n", game[:game_name])
+			printf("Victories:\n")
+			write_line(80)
+
+			victory_ids = (player[:game_list][game_id][:victory_list]).keys
+			victory_ids.each do |victory_id|
+
+        		victory = @games[game_id][:victory_list][victory_id]
+
+		        printf("Victory name: %s\n", victory[:victory_name])
+		        printf("Victory points: %s\n", victory[:victory_points])
+		        score += (victory[:victory_points]).to_i
+      		end
+      		printf("Total victory score: %s\n", score.to_s)
+      	end
+    end
+
+  	def summarize_player(command, player_id)
+    	player = @players[player_id]
+
+    	# Print the header
+		printf("\nSummary of Player: %s (Player ID: %s)\n", player[:player_name], player_id)
+		printf("Total Victory Score: %s points\n\n", total_victory_score(player_id))
+		printf("%-25s%-15s%-15s%-20s\n", "Games", "Victories", "Score", "IGN")
+		write_line(80)
+
+		# Loop through each game
+		game_ids = player[:game_list].keys
+		game_ids.each do |game_id|
+      		game = @games[game_id]
+
+      		# Keep an index to number the entries
+      		i = game_ids.index(game_id) + 1
+
+      		# Calculate the victory count
+      		player_victory_count = player_victory_count(player_id, game_id)
+      		game_victory_count = game_victory_count(game_id)
+      		victory_count = player_victory_count.to_s + "/" + game_victory_count.to_s
+
+      		# Calculate the victory score
+      		player_victory_score = player_victory_score(player_id, game_id)
+      		game_victory_score = game_victory_score(game_id)
+      		victory_score = player_victory_score.to_s + "/" + game_victory_score.to_s
+
+      		# Find the player's IGN
+      		player_ign = player[:game_list][game_id][:player_ign]
+
+      		# Print the data
+			printf("%-25s%-15s%-15s%-20s\n", i.to_s + ". " + game[:game_name], victory_count, victory_score, player_ign)
+		end
+
+		# Print the next header
+		printf("\n%-25s%-15s\n", "Friends", "Score")
+		write_line(80)
+
+		# Loop through each friend
+    	player[:friend_list].each do |friend_id|
+      		friend = @players[friend_id]
+
+      		# Keep an index to number the entries
+      		i = player[:friend_list].index(friend_id) + 1
+
+      		# Print the data
+			printf("%-25s%-15s\n", i.to_s + ". " + friend[:player_name], total_victory_score(friend_id))
+    	end
+  	end
+
+  	def summarize_game(command, game_id)
+   		game = @games[game_id]
     
-    game = get_object("game", game_id, nil)
+    	# Print the header
+		printf("\nSummary of Game: %s (Game ID: %s)\n", game[:game_name], game_id)
+		printf("\n%-25s%-15s%-15s%-20s\n", "Players", "Victories", "Score", "IGN")
+		write_line(80)
 
-    puts("Comparison of " + player1[:player_name] + " and " + player2[:player_name] + " on " + game[:game_name])
-    if player1[:game_list][game_id][:victories].nil?
-      puts(player1[:player_name] + " has no victories for this game")
-    else
-      score = 0
-      puts(player1[:player_name] + "'s victories for this game: ")
-      victory_ids = (player1[:game_list][game_id][:victories]).keys
-      victory_ids.each do |victory_id|
-        victory = get_object("victory", game_id, victory_id)  
-        puts("Victory name: " + victory[:victory_name])
-        puts("Victory points: " + victory[:victory_points])
-        score += (victory[:victory_points]).to_i
-      end
-      puts("Total victory score: " + score.to_s)
-    end
+		players = Array.new
 
-    if player2[:game_list][game_id][:victories].nil?
-      puts(player2[:player_name] + " has no victories for this game")
-    else
-      score = 0
-      puts(player2[:player_name] + "'s victories for this game: ")
-      victory_ids = (player2[:game_list][game_id][:victories]).keys
-      victory_ids.each do |victory_id|
-        victory = get_object("victory", game_id, victory_id)
-        puts("Victory name: " + victory[:victory_name])
-        puts("Victory points: " + victory[:victory_points])
-        score += (victory[:victory_points]).to_i
-      end
-      puts("Total victory score: " + score.to_s)
-    end
+		# Loop through player database
+		player_ids = @players.keys
+		player_ids.each do |player_id|
 
-  end
+			# If the player plays the game, record them
+			if @players[player_id][:game_list].key?(game_id)
+				players.push(player_id)
+			end
+		end
 
-  def summarize_player(command, player_id)
-    player = get_object("player", player_id, nil)
+		# Loop through each game
+		players.each do |player_id|
+      		player = @players[player_id]
 
-    puts("Summary of player: " + player[:player_name])
-    puts("Player ID: " + player_id)
+      		# Keep an index to number the entries
+      		i = players.index(player_id) + 1
 
-    puts("Plays: ")
-    game_ids = player[:game_list].keys
-    game_ids.each do |game_id| 
-      game = get_object("game", game_id, nil)
-      puts(game[:game_name])
+      		# Calculate the victory count
+      		player_victory_count = player_victory_count(player_id, game_id)
+      		game_victory_count = game_victory_count(game_id)
+      		victory_count = player_victory_count.to_s + "/" + game_victory_count.to_s
 
-      if player[:game_list][game_id][:victories].nil?
-        puts("No victories for this game")
-      else
-        puts("Victories for this game: ")
-        victory_ids = (player[:game_list][game_id][:victories]).keys
-        victory_ids.each do |victory_id|
-          victory = get_object("victory", game_id, victory_id)  
-          puts(victory[:victory_name])
-        end
-      end
-    end
+      		# Calculate the victory score
+      		player_victory_score = player_victory_score(player_id, game_id)
+      		game_victory_score = game_victory_score(game_id)
+      		victory_score = player_victory_score.to_s + "/" + game_victory_score.to_s
 
-    puts("Friends: ")
-    player[:friend_list].each do |friend_id|   
-      friend = get_object("player", friend_id, nil)
-      puts(friend[:player_name])
-    end
-  end
+      		# Find the player's IGN
+      		player_ign = player[:game_list][game_id][:player_ign]
 
-  def summarize_game(command, game_id)
-    game = get_object("game", game_id, nil)
-    
-    puts("Summary of game: " + game[:game_name])
-    puts("Game ID: " + game_id)
-  end
+      		# Print the data
+			printf("%-25s%-15s%-15s%-20s\n", i.to_s + ". " + player[:player_name], victory_count, victory_score, player_ign)
+		end
 
-  def summarize_victory(command, game_id, victory_id)
-    victory = get_object("victory", game_id, victory_id)
+		# Print the next header
+		printf("\n%-25s%-15s%-20s\n", "Victories", "Points", "Times Achived")
+		write_line(80)
 
-    puts("Summary of victory: " + victory[:victory_name])
-    puts("Victory ID: " + victory_id)
-    puts("Victory Points: " + victory[:victory_points])
-  end
+		# Loop through each victory
+		victory_ids = (@games[game_id][:victory_list]).keys
+		victory_ids.each do |victory_id|
+  			victory = @games[game_id][:victory_list][victory_id]
 
-  def victory_ranking(command)
+      		# Keep an index to number the entries
+      		i = victory_ids.index(victory_id) + 1
+      		times_achieved = 0
 
-  end
+      		players.each do |player_id|
+      		player = @players[player_id]
+      			if !player[:game_list][game_id][:victory_list][victory_id].nil? then times_achieved += 1
+      			end
+      		end
+      		
+      		# Print the data
+      		printf("%-25s%-15s%-20s\n", i.to_s + ". " + victory[:victory_name], victory[:victory_points], times_achieved)
+      	end
+  	end
 
-  def get_object(type, id, id2)
-    case type
-    when "player" then return (@players[id])
-    when "game" then return (@games[id])
-    when "victory" then return (@games[id][:victories][id2])
-    end
-  end
+  	def summarize_victory(command, game_id, victory_id)
+		victory = @games[game_id][:victory_list][victory_id]
+
+  	end
+
+  	def victory_ranking(command)
+	  	player_ids = @players.keys
+	  	player_ids.each do |player_id|
+  			player = @players[player_id]
+
+		    game_ids = player[:game_list].keys
+		    game_ids.each do |game_id| 
+		    	game = @games[game_id]
+
+	    		if player[:game_list][game_id][:victory_list].nil?
+	     		else
+	        		victory_ids = (player[:game_list][game_id][:victory_list]).keys
+	        		victory_ids.each do |victory_id|
+	          			victory = @games[game_id][:victory_list][victory_id]
+	        		end
+	      		end
+	    	end
+		end
+	end
+
+  	def write_line(length)
+  		for i in 0..length
+  			print("-")
+  		end
+  		printf("\n")
+  	end
+
+  	def player_victory_count(player_id, game_id)
+		if !@players[player_id][:game_list][game_id][:victory_list].nil?	
+			return @players[player_id][:game_list][game_id][:victory_list].length
+		else return 0
+		end
+	end
+
+	def game_victory_count(game_id)
+		if !@games[game_id][:victory_list].nil?
+			return @games[game_id][:victory_list].length	
+		else return 0
+		end
+	end
+
+	#Unused
+	def total_victory_count(player_id)
+  		count = 0
+
+  		# Loop through all of the player's games
+  		if !@players[player_id][:game_list].nil?
+  			game_ids = @players[player_id][:game_list].keys
+  			game_ids.each do |game_id| 
+		    	game = @games[game_id]
+
+		    	count += player_victory_count(player_id, game_id)
+			end
+			return count
+	    else return 0
+	    end
+	end
+
+	def player_victory_score(player_id, game_id)
+		score = 0
+
+		if !@players[player_id][:game_list][game_id][:victory_list].nil?
+		    victory_ids = (@players[player_id][:game_list][game_id][:victory_list]).keys
+			victory_ids.each do |victory_id|
+		    	score += (@games[game_id][:victory_list][victory_id][:victory_points]).to_i
+		    end
+		    return score
+		else return 0
+		end
+	end
+
+  	def game_victory_score(game_id)
+  		score = 0
+
+  		if !@games[game_id][:victory_list].nil?
+	    	victory_ids = @games[game_id][:victory_list].keys
+	    	victory_ids.each do |victory_id|
+	    		score += (@games[game_id][:victory_list][victory_id][:victory_points]).to_i
+	    	end
+    		return score
+		else return 0
+		end
+	end
+
+  	def total_victory_score(player_id)
+  		score = 0
+
+  		# Loop through all of the player's games
+  		if !@players[player_id][:game_list].nil?
+  			game_ids = @players[player_id][:game_list].keys
+  			game_ids.each do |game_id| 
+		    	game = @games[game_id]
+
+		    	score += player_victory_score(player_id, game_id)
+			end
+			return score
+	    else return 0
+	    end
+	end
 
 end
 
