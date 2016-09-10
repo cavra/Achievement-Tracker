@@ -133,33 +133,6 @@ class Leaderboard
     	print_victories(player_id2, game_id)
     end
 
-  	def print_victories(player_id, game_id)
-    	player = @players[player_id]
-    	game = @games[game_id]
-
-    	if player[:game_list][game_id][:victory_list].nil?
-      		printf("\n %s has no victories for this %s.\n", player[:player_name], game[:game_name])
-    	else
-      		score = 0
-
-			printf("\nPlayer: %s\n", player[:player_name])
-			printf("Game: %s\n", game[:game_name])
-			printf("Victories:\n")
-			write_line(80)
-
-			victory_ids = (player[:game_list][game_id][:victory_list]).keys
-			victory_ids.each do |victory_id|
-
-        		victory = @games[game_id][:victory_list][victory_id]
-
-		        printf("Victory name: %s\n", victory[:victory_name])
-		        printf("Victory points: %s\n", victory[:victory_points])
-		        score += (victory[:victory_points]).to_i
-      		end
-      		printf("Total victory score: %s\n", score.to_s)
-      	end
-    end
-
   	def summarize_player(command, player_id)
     	player = @players[player_id]
 
@@ -230,7 +203,7 @@ class Leaderboard
 			end
 		end
 
-		# Loop through each game
+		# Loop through each player
 		players.each do |player_id|
       		player = @players[player_id]
 
@@ -272,35 +245,71 @@ class Leaderboard
       			if !player[:game_list][game_id][:victory_list][victory_id].nil? then times_achieved += 1
       			end
       		end
-      		
+
       		# Print the data
       		printf("%-25s%-15s%-20s\n", i.to_s + ". " + victory[:victory_name], victory[:victory_points], times_achieved)
       	end
   	end
 
+  	# Print a list of all players who have achieved a Victory, and the percentage of players who play that game who have the Victory.
   	def summarize_victory(command, game_id, victory_id)
 		victory = @games[game_id][:victory_list][victory_id]
+		achieved_count = 0
+		total_count = 0
 
+		# Print the header
+		printf("\nSummary of Victory: %s (Victory ID: %s)", victory[:victory_name], victory_id)
+		printf("\n%-25s%-15s\n", "Achieved by", "IGN")
+		write_line(80)
+
+		# Loop through player database
+		player_ids = @players.keys
+		player_ids.each do |player_id|
+
+			# If the player plays the game, increment the total count
+			if !lookup(@players, player_id, :game_list, game_id).nil?
+	      		total_count = total_count + 1
+
+				# And if the player has achieved the victory, print their data
+				if !lookup(@players, player_id, :game_list, game_id, :victory_list, victory_id).nil?
+		      		achieved_count = achieved_count + 1
+		      		player_ign = @players[player_id][:game_list][game_id][:player_ign]
+					printf("%-25s%-15s\n", achieved_count.to_s + ". " + @players[player_id][:player_name], player_ign)
+		      	end
+		    end
+		end
+
+		percentage = (achieved_count.to_f / total_count.to_f) * 100
+
+		printf("\n%i out of %i players have achieved this victory. (%i%%)\n", achieved_count, total_count, percentage)
   	end
 
+  	# Print a summary ranking all players by their total number of gamer points.
   	def victory_ranking(command)
+
+		# Print the header
+		printf("\nVictory Leaderboard\n")
+		printf("\n%-25s%-15s\n", "Player", "Total Victory Score")
+		write_line(80)
+
+		victory_scores = Hash.new
+
 	  	player_ids = @players.keys
 	  	player_ids.each do |player_id|
-  			player = @players[player_id]
 
-		    game_ids = player[:game_list].keys
-		    game_ids.each do |game_id| 
-		    	game = @games[game_id]
-
-	    		if player[:game_list][game_id][:victory_list].nil?
-	     		else
-	        		victory_ids = (player[:game_list][game_id][:victory_list]).keys
-	        		victory_ids.each do |victory_id|
-	          			victory = @games[game_id][:victory_list][victory_id]
-	        		end
-	      		end
-	    	end
+    		victory_scores.merge!({
+  				player_id => (total_victory_score(player_id))
+  			})
 		end
+
+		sorted = Hash[victory_scores.sort_by{|k,v| v}]
+		#sorted = victory_scores.sort_by {|k, v| v}.to_h
+
+		player_ids = sorted.keys
+		player_ids.each do |player_id|
+  			printf("%-25s%-15i\n", @players[player_id][:player_name], total_victory_score(player_id))
+		end
+
 	end
 
   	def write_line(length)
@@ -309,6 +318,33 @@ class Leaderboard
   		end
   		printf("\n")
   	end
+
+  	def print_victories(player_id, game_id)
+    	player = @players[player_id]
+    	game = @games[game_id]
+
+    	if player[:game_list][game_id][:victory_list].nil?
+      		printf("\n %s has no victories for this %s.\n", player[:player_name], game[:game_name])
+    	else
+      		score = 0
+
+			printf("\nPlayer: %s\n", player[:player_name])
+			printf("Game: %s\n", game[:game_name])
+			printf("Victories:\n")
+			write_line(80)
+
+			victory_ids = (player[:game_list][game_id][:victory_list]).keys
+			victory_ids.each do |victory_id|
+
+        		victory = @games[game_id][:victory_list][victory_id]
+
+		        printf("Victory name: %s\n", victory[:victory_name])
+		        printf("Victory points: %s\n", victory[:victory_points])
+		        score += (victory[:victory_points]).to_i
+      		end
+      		printf("Total victory score: %s\n", score.to_s)
+      	end
+    end
 
   	def player_victory_count(player_id, game_id)
 		if !@players[player_id][:game_list][game_id][:victory_list].nil?	
@@ -381,6 +417,16 @@ class Leaderboard
 			return score
 	    else return 0
 	    end
+	end
+
+	# https://stackoverflow.com/questions/10130726/ruby-access-multidimensional-hash-and-avoid-access-nil-object
+	def lookup(model, key, *rest) 
+    	v = model[key]
+    	if rest.empty?
+     	  v
+    	else
+    	   v && lookup(v, *rest)
+    	end
 	end
 
 end
