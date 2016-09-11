@@ -152,8 +152,8 @@ class Leaderboard
 
     # Firstly, check if the player plays any games
     if @players[player_id][:game_list].keys.empty?
-        printf("No Games :(\n")
-        print_line
+      printf("No Games :(\n")
+      print_line
     else
       # For each game found, print its data
       @players[player_id][:game_list].keys.each_with_index do |game_id, index|
@@ -225,7 +225,7 @@ class Leaderboard
     # For each victory id
     @games[game_id][:victory_list].keys.each_with_index do |victory_id, index|
 
-      # Increment if the player has achieved the victory
+      # Keep track of how many players have achieved the victory
       times_achieved = 0
       players.each do |player_id|
         times_achieved += 1 if @players[player_id][:game_list][game_id][:victory_list].include?(victory_id) 
@@ -291,9 +291,8 @@ class Leaderboard
     printf("%-25s%-15s\n", "Player", "Total Gamerscore")
     print_line
 
-    victory_scores = {}
-
     # For each player, store their ID and total gamerscore in a temporary Hash
+    victory_scores = {}
     @players.each_key do |player_id|
       victory_scores.merge!( { player_id => @players[player_id][:gamerscore].to_i } )
     end
