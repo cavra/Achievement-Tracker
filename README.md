@@ -41,4 +41,4 @@ Style:
 - [x] Program is not drowning in unncessary comments
 
 ## Notes
-This program assumes that all Players, Games, Victories, and data relationships are guaranteed to exist before being operated on.
+This program assumes that all Players, Games, Victories, and data relationships are guaranteed to exist before being operated on. Also, due to an environmental error, pushing to git had previously messed up my indentation. After triple checking, I believe I have solved the problem and corrected the indentation. Should any line be misaligned, please tell me and disregard. While it may not affect the functionality of the program, it makes the code harder to read. And if I have an opportunity to enhance my program, I will always take it.  
