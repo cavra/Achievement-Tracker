@@ -1,8 +1,11 @@
-#315 Individual Project - Leaderboard
+# CSCE-315 Individual Project - Achievement Tracker/Leaderboard
 
-Program written in alignment the style guide found [here](https://github.com/bbatsov/ruby-style-guide#source-code-layout)
+Time spent: **25** hours spent in total
 
-Execute with 
+**Achievement Tracker/Leaderboard** is the first programming assignment for CSCE 315 at Texas A&M. I wrote it in Ruby, following the style convention [here](https://github.com/bbatsov/ruby-style-guide#source-code-layout). This was my first time to ever use Ruby. A description of the assignment can be found [here](http://ecologylab.net/courses/studio/assignments/individual1.html).
+
+## Instructions
+Execute the program with 
 
 $ ruby parse_input.rb < commands.txt 
 
@@ -11,3 +14,31 @@ Or simply execute
 $ ruby parse_input.rb
 
 And then type the commands in manually. When done, press ctrl + d to signal the end of file. 
+
+## Objectives
+
+Functionality: 
+
+- [x] Program reads in from STDIN
+- [x] AddPlayer
+- [x] AddGame
+- [x] AddVictory
+- [x] Plays
+- [x] AddFriends
+- [x] WinVictory
+- [x] FriendsWhoPlay
+- [x] ComparePlayers
+- [x] SummarizePlayer
+- [x] SummarizeGame
+- [x] SummarizeVictory
+- [x] VictoryRanking
+
+Style:
+
+- [x] Program follows convention linked above as far as I am aware
+- [x] Program reports are well-formatted and easily read
+- [x] Program is well documented with clear, concise comments
+- [x] Program is not drowning in unncessary comments
+
+## Notes
+This program assumes that all Players, Games, Victories, and data relationships are guaranteed to exist before being operated on.
