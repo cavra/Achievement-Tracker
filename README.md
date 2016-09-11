@@ -1,11 +1,13 @@
 #315 Individual Project - Leaderboard
 
+Program written in alignment the style guide found [here](https://github.com/bbatsov/ruby-style-guide#source-code-layout)
+
 Execute with 
 
-$ ruby achievement_tracker.rb < commands.txt 
+$ ruby parse_input.rb < commands.txt 
 
 Or simply execute 
 
-$ ruby achievement_tracker.rb
+$ ruby parse_input.rb
 
 And then type the commands in manually. When done, press ctrl + d to signal the end of file. 
