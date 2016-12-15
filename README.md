@@ -1,4 +1,4 @@
-# CSCE-315 Individual Project - Achievement Tracker/Leaderboard
+# CSCE-315 - Individual Project - Achievement Tracker/Leaderboard
 
 Time spent: **25** hours spent in total
 
@@ -42,3 +42,6 @@ Style:
 
 ## Notes
 This program assumes that all Players, Games, Victories, and data relationships are guaranteed to exist before being operated on. Also, due to an environmental error, pushing to git had previously messed up my indentation. After triple checking, I believe I have solved the problem and corrected the indentation. Should any line be misaligned, please tell me and disregard. While it may not affect the functionality of the program, it makes the code harder to read. And if I have an opportunity to enhance my program, I will always take it.  
+## Aggie Code of Honor
+An Aggie does not lie, cheat or steal or tolerate those who do.<br>
+This project represents many hours of hard work. Plagiarizing my project for your own grade not only goes against the Aggie Code of Honor, but it is detrimental to your education. Respect yourself, the University, and my work by following the Code.
